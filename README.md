@@ -15,7 +15,7 @@
 - 🌍 **IP Geolocation** - Track attacker locations worldwide
 - 📊 **Security Dashboard** - Comprehensive security overview
 - 💾 **Data Export** - Export logs and analytics
-- 🎨 **Beautiful CLI** - Gemini-style colorful interface
+- 🎨 **Beautiful CLI** - Colorful terminal interface
 - ⚡ **Global Command** - Works from any directory
 
 ---
