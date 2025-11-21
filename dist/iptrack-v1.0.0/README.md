@@ -1,0 +1,329 @@
+# 🛡️ Defender - Security Monitoring System
+
+A comprehensive security system for macOS that tracks, logs, and blocks unauthorized access attempts with real-time IP geolocation tracking.
+
+## ✨ Features
+
+- 🚨 **Real-time Monitoring** - Tracks all access attempts to your system
+- 🚫 **Auto-blocking** - Automatically blocks IPs after configurable failed attempts
+- 📍 **IP Geolocation** - Tracks physical location of attackers
+- 📊 **Detailed Logging** - Comprehensive logs of all security events
+- 🔄 **Reversible Actions** - Easily unblock IPs and reverse security actions
+- 🎛️ **Control Panel** - Central dashboard to manage everything
+- 💾 **Data Export** - Export all security data for analysis
+
+## 📋 Requirements
+
+- Python 3.7+
+- macOS (designed for Mac systems)
+- Internet connection (for IP geolocation)
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
+
+```bash
+pip install requests
+```
+
+### 2. Run Demo
+
+```bash
+python3 quick_start.py
+```
+
+This will simulate attacks and show you how the system works!
+
+## 📖 Usage
+
+### Security Monitor
+
+Track and log access attempts:
+
+```bash
+# Log a failed access attempt
+python3 security_monitor.py log 192.168.1.100 attacker
+
+# Block an IP manually
+python3 security_monitor.py block 45.142.120.10
+
+# Unblock an IP
+python3 security_monitor.py unblock 45.142.120.10
+
+# View all blocked IPs
+python3 security_monitor.py list
+
+# Show statistics
+python3 security_monitor.py stats
+
+# Simulate an attack (for testing)
+python3 security_monitor.py simulate 185.220.101.50
+```
+
+### IP Location Tracker
+
+Find the physical location of attackers:
+
+```bash
+# Get location for an IP
+python3 ip_locator.py 8.8.8.8
+
+# Get detailed report
+python3 ip_locator.py report 45.142.120.10
+
+# View cached locations
+python3 ip_locator.py cache
+```
+
+### Defender Control Panel
+
+Central command center for managing security:
+
+```bash
+# View dashboard with all statistics
+python3 defender_control.py dashboard
+
+# Unblock specific IP
+python3 defender_control.py unblock 192.168.1.100
+
+# Unblock all IPs
+python3 defender_control.py unblock-all
+
+# View access logs
+python3 defender_control.py logs
+
+# View logs for specific IP
+python3 defender_control.py logs 45.142.120.10
+
+# Track IP location
+python3 defender_control.py locate 8.8.8.8
+
+# Export all data
+python3 defender_control.py export security_backup.json
+
+# Reset system (clear all data)
+python3 defender_control.py reset
+
+# Show help
+python3 defender_control.py help
+```
+
+## ⚙️ Configuration
+
+Edit `config.json` to customize settings:
+
+```json
+{
+  "max_attempts": 3,              // Failed attempts before blocking
+  "block_duration_minutes": 60,   // How long to block (not yet implemented)
+  "auto_block": true,              // Automatically block after max attempts
+  "whitelist_ips": [               // IPs that will never be blocked
+    "127.0.0.1"
+  ]
+}
+```
+
+## 📁 File Structure
+
+```
+difender/
+├── security_monitor.py      # Main security monitoring engine
+├── ip_locator.py            # IP geolocation tracker
+├── defender_control.py      # Control panel & management
+├── quick_start.py           # Demo script
+├── config.json              # Configuration settings
+├── logs/                    # All logs and data stored here
+│   ├── security_YYYYMMDD.log
+│   ├── blocked_ips.json
+│   ├── login_attempts.json
+│   ├── ip_locations.json
+│   └── blocked_ips.pf       # Firewall rules (for macOS pfctl)
+└── README.md
+```
+
+## 🔒 How It Works
+
+### 1. Access Attempt Logging
+When someone tries to access your system:
+- Attempt is logged with timestamp, IP, and username
+- Counter increments for that IP address
+- All data is stored in `logs/login_attempts.json`
+
+### 2. Automatic Blocking
+After configurable failed attempts (default: 3):
+- IP is added to block list
+- Firewall rule is created in `logs/blocked_ips.pf`
+- Alert is logged
+- Location is tracked
+
+### 3. IP Geolocation
+For each blocked IP:
+- Queries free IP geolocation APIs
+- Retrieves: country, city, coordinates, ISP
+- Caches results for efficiency
+- Generates Google Maps links
+
+### 4. Reversible Actions
+You can always:
+- Unblock individual IPs
+- Unblock all IPs at once
+- Clear attempt history
+- Reset entire system
+
+## 🍎 macOS Firewall Integration
+
+The system generates firewall rules for macOS's `pfctl`. To activate blocking:
+
+```bash
+# View generated rules
+cat logs/blocked_ips.pf
+
+# Apply firewall rules (requires sudo)
+sudo pfctl -f logs/blocked_ips.pf
+
+# Check firewall status
+sudo pfctl -s rules
+```
+
+**Note:** Actual firewall blocking requires administrator privileges.
+
+## 📊 Dashboard Example
+
+```
+🛡️  DEFENDER SECURITY DASHBOARD
+======================================================================
+
+📊 Statistics:
+   Total Access Attempts: 15
+   Unique IPs Attempted: 5
+   Currently Blocked: 3
+
+🚫 Blocked IPs:
+
+   IP: 45.142.120.10
+   Blocked At: 2025-11-21T10:30:45
+   Reason: Too many failed attempts
+   Attempts: 5
+   Location: Moscow, Russia
+   ISP: Example Hosting Ltd
+
+======================================================================
+```
+
+## 🌍 IP Geolocation APIs Used
+
+The system uses multiple free APIs with automatic fallback:
+- ip-api.com
+- ipapi.co
+- ipwhois.app
+
+No API key required!
+
+## 🔧 Advanced Usage
+
+### Python API
+
+You can use the modules in your own Python scripts:
+
+```python
+from security_monitor import SecurityMonitor
+from ip_locator import IPLocator
+
+# Initialize
+monitor = SecurityMonitor()
+locator = IPLocator()
+
+# Log an attempt
+monitor.log_attempt("192.168.1.100", username="attacker")
+
+# Block an IP
+monitor.block_ip("45.142.120.10", reason="Suspicious activity")
+
+# Get location
+location = locator.get_location("8.8.8.8")
+print(location['country'])  # United States
+
+# Get statistics
+stats = monitor.get_statistics()
+print(f"Total attempts: {stats['total_attempts']}")
+```
+
+## 🚨 Important Notes
+
+1. **macOS Specific**: This system is designed for macOS and uses `pfctl` for firewall rules
+2. **Sudo Required**: Actual firewall blocking requires administrator privileges
+3. **Testing**: Use the simulate feature to test without real attacks
+4. **Privacy**: All data is stored locally in the `logs/` folder
+5. **Internet Required**: IP geolocation requires internet connection
+
+## 🛟 Troubleshooting
+
+**Problem: Can't block IPs**
+- Solution: You need sudo privileges to modify firewall rules
+- Run: `sudo pfctl -f logs/blocked_ips.pf`
+
+**Problem: Location tracking not working**
+- Solution: Check internet connection
+- Free APIs have rate limits, wait a moment and try again
+
+**Problem: Logs not saving**
+- Solution: Check write permissions in the directory
+- Make sure `logs/` folder can be created
+
+## 🎯 Use Cases
+
+- **Home Security**: Monitor who's trying to access your Mac
+- **Development**: Test security features of your applications
+- **Learning**: Understand how IP blocking and geolocation works
+- **Network Admin**: Track unauthorized access attempts
+
+## 📝 Example Workflow
+
+1. **Monitor Your System**:
+   ```bash
+   python3 security_monitor.py log 185.220.101.50 hacker
+   ```
+
+2. **Check Dashboard**:
+   ```bash
+   python3 defender_control.py dashboard
+   ```
+
+3. **Find Attacker Location**:
+   ```bash
+   python3 defender_control.py locate 185.220.101.50
+   ```
+
+4. **Export Evidence**:
+   ```bash
+   python3 defender_control.py export evidence.json
+   ```
+
+5. **Unblock if Needed**:
+   ```bash
+   python3 defender_control.py unblock 185.220.101.50
+   ```
+
+## 🔐 Security Best Practices
+
+1. Regularly check the dashboard
+2. Export logs periodically for backup
+3. Review blocked IPs weekly
+4. Keep whitelist updated
+5. Monitor the security logs
+
+## 📜 License
+
+Free to use for personal and educational purposes.
+
+## 🤝 Contributing
+
+This is a personal security tool. Feel free to modify for your needs!
+
+## ⚠️ Disclaimer
+
+This tool is for educational and personal security purposes. Always comply with local laws and regulations when monitoring network activity.
+
+---
+
+**Made with 🛡️ for macOS Security**

@@ -1,0 +1,24 @@
+{
+  "max_attempts": 3,
+  "block_duration_minutes": 60,
+  "monitor_auth_log": true,
+  "auto_block": true,
+  "alert_email": null,
+  "whitelist_ips": [
+    "127.0.0.1",
+    "::1"
+  ],
+  "monitoring": {
+    "check_interval_seconds": 60,
+    "log_retention_days": 30
+  },
+  "geolocation": {
+    "enabled": true,
+    "cache_duration_days": 7
+  },
+  "notifications": {
+    "log_to_console": true,
+    "log_to_file": true,
+    "send_email_alerts": false
+  }
+}

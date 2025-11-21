@@ -1,0 +1,421 @@
+#!/usr/bin/env python3
+"""
+IPTrack - Global CLI Security Monitoring Tool
+A professional command-line tool for tracking and blocking unauthorized access attempts
+Similar to Gemini CLI - simple, powerful, intuitive
+"""
+
+import os
+import sys
+import argparse
+import time
+import subprocess
+from pathlib import Path
+from datetime import datetime
+import json
+
+# ANSI Color codes for beautiful CLI output
+class Colors:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+    
+    @staticmethod
+    def disable():
+        Colors.HEADER = ''
+        Colors.BLUE = ''
+        Colors.CYAN = ''
+        Colors.GREEN = ''
+        Colors.YELLOW = ''
+        Colors.RED = ''
+        Colors.BOLD = ''
+        Colors.UNDERLINE = ''
+        Colors.END = ''
+
+def print_header(text):
+    """Print a formatted header"""
+    print(f"\n{Colors.BOLD}{Colors.CYAN}{'='*70}{Colors.END}")
+    print(f"{Colors.BOLD}{Colors.CYAN}{text}{Colors.END}")
+    print(f"{Colors.BOLD}{Colors.CYAN}{'='*70}{Colors.END}\n")
+
+def print_success(text):
+    """Print success message"""
+    print(f"{Colors.GREEN}✓ {text}{Colors.END}")
+
+def print_error(text):
+    """Print error message"""
+    print(f"{Colors.RED}✗ {text}{Colors.END}")
+
+def print_warning(text):
+    """Print warning message"""
+    print(f"{Colors.YELLOW}⚠ {text}{Colors.END}")
+
+def print_info(text):
+    """Print info message"""
+    print(f"{Colors.BLUE}ℹ {text}{Colors.END}")
+
+# Adjust import paths for global installation
+try:
+    from security_monitor import SecurityMonitor
+    from ip_locator import IPLocator
+    from defender_control import DefenderControl
+except ImportError:
+    # Try to import from package
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from security_monitor import SecurityMonitor
+    from ip_locator import IPLocator
+    from defender_control import DefenderControl
+
+
+class IPTrackCLI:
+    """Main CLI interface for IPTrack - Like Gemini CLI but for security"""
+    
+    def __init__(self):
+        self.monitor = SecurityMonitor()
+        self.locator = IPLocator()
+        self.control = DefenderControl()
+    
+    def print_banner(self):
+        """Print IPTrack banner"""
+        banner = f"""
+{Colors.BOLD}{Colors.CYAN}╔════════════════════════════════════════════════════════════════════╗
+║                                                                    ║
+║              🛡️  IPTrack Security Tool v1.0.0 🛡️                  ║
+║                                                                    ║
+║         Professional CLI Security Monitoring & IP Blocking         ║
+║                                                                    ║
+╚════════════════════════════════════════════════════════════════════╝{Colors.END}
+"""
+        print(banner)
+        
+    def watch_logs(self, follow=True, lines=50):
+        """Watch security logs in real-time"""
+        log_file = self.monitor.log_dir / f"security_{datetime.now().strftime('%Y%m%d')}.log"
+        
+        if not log_file.exists():
+            print_warning(f"Log file not found: {log_file}")
+            print_info("No activity logged today yet.")
+            return
+        
+        print_header(f"📡 Watching Security Logs")
+        print(f"{Colors.CYAN}Log file:{Colors.END} {log_file}")
+        print(f"{Colors.YELLOW}Press Ctrl+C to stop{Colors.END}\n")
+        
+        if follow:
+            # Real-time tail functionality
+            try:
+                if sys.platform == 'darwin' or sys.platform.startswith('linux'):
+                    # Use native tail command for better performance
+                    subprocess.run(['tail', '-f', str(log_file)])
+                else:
+                    # Fallback: Python-based tail
+                    self._tail_file(log_file)
+            except KeyboardInterrupt:
+                print(f"\n\n{Colors.GREEN}✓ Stopped watching logs{Colors.END}")
+        else:
+            # Just show last N lines
+            self._show_last_lines(log_file, lines)
+    
+    def _tail_file(self, filepath):
+        """Python implementation of tail -f"""
+        with open(filepath, 'r') as f:
+            # Go to end of file
+            f.seek(0, 2)
+            
+            while True:
+                line = f.readline()
+                if not line:
+                    time.sleep(0.1)
+                    continue
+                print(line, end='')
+    
+    def _show_last_lines(self, filepath, n=50):
+        """Show last N lines of a file"""
+        try:
+            with open(filepath, 'r') as f:
+                lines = f.readlines()
+                for line in lines[-n:]:
+                    print(line, end='')
+        except Exception as e:
+            print(f"Error reading file: {e}")
+    
+    def block_ip(self, ip, reason="Manual block"):
+        """Block an IP address"""
+        print_header(f"🚫 Blocking IP Address")
+        print(f"{Colors.YELLOW}IP:{Colors.END} {ip}")
+        print(f"{Colors.YELLOW}Reason:{Colors.END} {reason}\n")
+        
+        success = self.monitor.block_ip(ip, reason=reason)
+        
+        if success:
+            print_success(f"{ip} has been blocked")
+            print(f"\n{Colors.CYAN}💡 To activate firewall rules:{Colors.END}")
+            print(f"   {Colors.BOLD}sudo pfctl -f {self.monitor.log_dir}/blocked_ips.pf{Colors.END}")
+        else:
+            print_warning(f"{ip} is already blocked")
+    
+    def unblock_ip(self, ip):
+        """Unblock an IP address"""
+        print_header(f"🔓 Unblocking IP Address")
+        success = self.control.unblock_ip(ip)
+        return success
+    
+    def list_blocked(self, detailed=False):
+        """List all blocked IPs"""
+        blocked = self.monitor.get_blocked_ips()
+        
+        if not blocked:
+            print_header("🚫 Blocked IPs")
+            print_success("No IPs are currently blocked")
+            return
+        
+        print_header(f"🚫 Blocked IPs ({len(blocked)} total)")
+        
+        for ip, info in blocked.items():
+            print(f"\n{Colors.BOLD}{Colors.RED}📍 {ip}{Colors.END}")
+            print(f"   {Colors.CYAN}Blocked:{Colors.END} {info['blocked_at']}")
+            print(f"   {Colors.CYAN}Reason:{Colors.END} {info['reason']}")
+            print(f"   {Colors.CYAN}Attempts:{Colors.END} {info['attempts']}")
+            
+            if detailed:
+                # Get location info
+                try:
+                    location = self.locator.get_location(ip)
+                    if location:
+                        loc_str = f"{location.get('city', 'Unknown')}, {location.get('country', 'Unknown')}"
+                        print(f"   {Colors.CYAN}Location:{Colors.END} {loc_str}")
+                        if location.get('isp'):
+                            print(f"   {Colors.CYAN}ISP:{Colors.END} {location['isp']}")
+                except:
+                    pass
+        
+        print(f"\n{Colors.BOLD}{Colors.CYAN}{'='*70}{Colors.END}\n")
+    
+    def locate_ip(self, ip):
+        """Show location information for an IP"""
+        print_header(f"🌍 IP Geolocation")
+        self.control.track_ip_location(ip)
+    
+    def show_stats(self):
+        """Show security statistics"""
+        stats = self.monitor.get_statistics()
+        
+        print_header("📊 Security Statistics")
+        print(f"{Colors.BOLD}Total Access Attempts:{Colors.END} {Colors.YELLOW}{stats['total_attempts']}{Colors.END}")
+        print(f"{Colors.BOLD}Unique IPs Attempted:{Colors.END} {Colors.YELLOW}{stats['unique_ips_attempted']}{Colors.END}")
+        print(f"{Colors.BOLD}Currently Blocked:{Colors.END} {Colors.RED}{stats['blocked_ips_count']}{Colors.END}")
+        
+        if stats['blocked_ips']:
+            print(f"\n{Colors.BOLD}Blocked IPs:{Colors.END}")
+            for ip in stats['blocked_ips']:
+                print(f"  {Colors.RED}•{Colors.END} {ip}")
+        
+        print(f"\n{Colors.BOLD}{Colors.CYAN}{'='*70}{Colors.END}\n")
+    
+    def show_logs(self, ip=None, lines=20):
+        """Show access attempt logs"""
+        if ip:
+            print_header(f"📋 Access Logs for {ip}")
+            self.control.view_logs(ip)
+        else:
+            print_header(f"📋 Recent Access Attempts (last {lines})")
+            
+            attempts = self.monitor.login_attempts
+            if not attempts:
+                print_info("No access attempts recorded yet")
+                return
+            
+            # Flatten and sort all attempts
+            all_attempts = []
+            for ip_addr, ip_attempts in attempts.items():
+                for attempt in ip_attempts:
+                    all_attempts.append({**attempt, 'ip': ip_addr})
+            
+            # Sort by timestamp
+            all_attempts.sort(key=lambda x: x['timestamp'], reverse=True)
+            
+            # Show last N
+            for attempt in all_attempts[:lines]:
+                status_color = Colors.RED if attempt['status'] == 'failed' else Colors.GREEN
+                print(f"\n{Colors.CYAN}{attempt['timestamp']}{Colors.END}")
+                print(f"  {Colors.BOLD}IP:{Colors.END} {Colors.YELLOW}{attempt['ip']}{Colors.END}")
+                print(f"  {Colors.BOLD}User:{Colors.END} {attempt['username']}")
+                print(f"  {Colors.BOLD}Status:{Colors.END} {status_color}{attempt['status']}{Colors.END}")
+            
+            print(f"\n{Colors.BOLD}{Colors.CYAN}{'='*70}{Colors.END}\n")
+
+
+def main():
+    """Main entry point for iptrack command - Like Gemini CLI"""
+    
+    # Create CLI instance
+    cli = IPTrackCLI()
+    
+    # Show banner if no arguments
+    if len(sys.argv) == 1:
+        cli.print_banner()
+        print(f"{Colors.BOLD}Usage:{Colors.END} iptrack <command> [options]\n")
+        print(f"{Colors.BOLD}Commands:{Colors.END}")
+        print(f"  {Colors.GREEN}watch{Colors.END}        Watch security logs in real-time")
+        print(f"  {Colors.GREEN}block{Colors.END}        Block an IP address")
+        print(f"  {Colors.GREEN}unblock{Colors.END}      Unblock an IP address")
+        print(f"  {Colors.GREEN}list{Colors.END}         List all blocked IPs")
+        print(f"  {Colors.GREEN}locate{Colors.END}       Find IP geolocation")
+        print(f"  {Colors.GREEN}stats{Colors.END}        Show security statistics")
+        print(f"  {Colors.GREEN}logs{Colors.END}         Show access attempt logs")
+        print(f"  {Colors.GREEN}dashboard{Colors.END}    Show full security dashboard")
+        print(f"  {Colors.GREEN}export{Colors.END}       Export security data")
+        print(f"  {Colors.GREEN}help{Colors.END}         Show detailed help\n")
+        print(f"{Colors.BOLD}Examples:{Colors.END}")
+        print(f"  iptrack watch                 {Colors.CYAN}# Watch logs in real-time{Colors.END}")
+        print(f"  iptrack block 192.168.1.100   {Colors.CYAN}# Block an IP{Colors.END}")
+        print(f"  iptrack list -d               {Colors.CYAN}# List with details{Colors.END}")
+        print(f"  iptrack locate 8.8.8.8        {Colors.CYAN}# Find IP location{Colors.END}\n")
+        print(f"{Colors.YELLOW}For detailed help:{Colors.END} iptrack help\n")
+        return
+    
+    parser = argparse.ArgumentParser(
+        prog='iptrack',
+        description=f'{Colors.BOLD}IPTrack{Colors.END} - Professional Security Monitoring & IP Blocking Tool',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        add_help=False
+    )
+    
+    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+    
+    # Watch command
+    watch_parser = subparsers.add_parser('watch', help='Watch security logs in real-time')
+    watch_parser.add_argument('-n', '--lines', type=int, default=50,
+                            help='Number of lines to show initially')
+    watch_parser.add_argument('--no-follow', action='store_true',
+                            help='Don\'t follow the log file')
+    
+    # Block command
+    block_parser = subparsers.add_parser('block', help='Block an IP address')
+    block_parser.add_argument('ip', help='IP address to block')
+    block_parser.add_argument('-r', '--reason', default='Manual block',
+                            help='Reason for blocking')
+    
+    # Unblock command
+    unblock_parser = subparsers.add_parser('unblock', help='Unblock an IP address')
+    unblock_parser.add_argument('ip', help='IP address to unblock')
+    
+    # List command
+    list_parser = subparsers.add_parser('list', help='List blocked IPs')
+    list_parser.add_argument('-d', '--detailed', action='store_true',
+                           help='Show detailed information including location')
+    
+    # Locate command
+    locate_parser = subparsers.add_parser('locate', help='Find IP location')
+    locate_parser.add_argument('ip', help='IP address to locate')
+    
+    # Stats command
+    subparsers.add_parser('stats', help='Show security statistics')
+    
+    # Logs command
+    logs_parser = subparsers.add_parser('logs', help='Show access logs')
+    logs_parser.add_argument('ip', nargs='?', help='Show logs for specific IP')
+    logs_parser.add_argument('-n', '--lines', type=int, default=20,
+                           help='Number of log entries to show')
+    
+    # Dashboard command
+    subparsers.add_parser('dashboard', help='Show full security dashboard')
+    
+    # Export command
+    export_parser = subparsers.add_parser('export', help='Export security data')
+    export_parser.add_argument('file', nargs='?', default='security_export.json',
+                             help='Output file name')
+    
+    # Unblock-all command
+    subparsers.add_parser('unblock-all', help='Unblock all IPs')
+    
+    # Reset command
+    subparsers.add_parser('reset', help='Reset system (clear all data)')
+    
+    # Help command
+    subparsers.add_parser('help', help='Show detailed help')
+    
+    args = parser.parse_args()
+    
+    if not args.command:
+        cli.print_banner()
+        return
+    
+    # Execute commands
+    try:
+        if args.command == 'help':
+            cli.print_banner()
+            print(f"{Colors.BOLD}{Colors.CYAN}IPTrack Commands:{Colors.END}\n")
+            print(f"{Colors.GREEN}watch{Colors.END}          Watch security logs in real-time")
+            print(f"               Options: -n (lines), --no-follow")
+            print(f"{Colors.GREEN}block{Colors.END}          Block an IP address")
+            print(f"               Usage: iptrack block <ip> [-r reason]")
+            print(f"{Colors.GREEN}unblock{Colors.END}        Unblock an IP address")
+            print(f"               Usage: iptrack unblock <ip>")
+            print(f"{Colors.GREEN}list{Colors.END}           List all blocked IPs")
+            print(f"               Options: -d (detailed with location)")
+            print(f"{Colors.GREEN}locate{Colors.END}         Find IP geolocation")
+            print(f"               Usage: iptrack locate <ip>")
+            print(f"{Colors.GREEN}stats{Colors.END}          Show security statistics")
+            print(f"{Colors.GREEN}logs{Colors.END}           Show access attempt logs")
+            print(f"               Options: -n (number of entries)")
+            print(f"{Colors.GREEN}dashboard{Colors.END}      Show full security dashboard")
+            print(f"{Colors.GREEN}export{Colors.END}         Export all security data")
+            print(f"               Usage: iptrack export [filename]")
+            print(f"{Colors.GREEN}unblock-all{Colors.END}    Unblock all currently blocked IPs")
+            print(f"{Colors.GREEN}reset{Colors.END}          Reset system (clear all data)\n")
+            return
+        
+        elif args.command == 'watch':
+            cli.watch_logs(follow=not args.no_follow, lines=args.lines)
+        
+        elif args.command == 'block':
+            cli.block_ip(args.ip, args.reason)
+        
+        elif args.command == 'unblock':
+            cli.unblock_ip(args.ip)
+        
+        elif args.command == 'list':
+            cli.list_blocked(detailed=args.detailed)
+        
+        elif args.command == 'locate':
+            cli.locate_ip(args.ip)
+        
+        elif args.command == 'stats':
+            cli.show_stats()
+        
+        elif args.command == 'logs':
+            cli.show_logs(ip=args.ip, lines=args.lines)
+        
+        elif args.command == 'dashboard':
+            print_header("🎛️  Security Dashboard")
+            cli.control.show_dashboard()
+        
+        elif args.command == 'export':
+            print_header("💾 Export Security Data")
+            cli.control.export_logs(args.file)
+        
+        elif args.command == 'unblock-all':
+            print_header("🔓 Unblock All IPs")
+            cli.control.unblock_all()
+        
+        elif args.command == 'reset':
+            print_header("⚠️  Reset System")
+            cli.control.reset_system()
+    
+    except KeyboardInterrupt:
+        print(f"\n\n{Colors.YELLOW}✓ Operation cancelled{Colors.END}")
+        sys.exit(0)
+    except Exception as e:
+        print_error(f"Error: {e}")
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

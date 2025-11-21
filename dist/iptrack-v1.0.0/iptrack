@@ -1,0 +1,314 @@
+#!/usr/bin/env python3
+"""
+IPTrack - Global CLI Security Monitoring Tool
+A professional command-line tool for tracking and blocking unauthorized access attempts
+"""
+
+import os
+import sys
+import argparse
+import time
+import subprocess
+from pathlib import Path
+from datetime import datetime
+import json
+
+# Adjust import paths for global installation
+try:
+    from security_monitor import SecurityMonitor
+    from ip_locator import IPLocator
+    from defender_control import DefenderControl
+except ImportError:
+    # Try to import from package
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from security_monitor import SecurityMonitor
+    from ip_locator import IPLocator
+    from defender_control import DefenderControl
+
+
+class IPTrackCLI:
+    """Main CLI interface for IPTrack"""
+    
+    def __init__(self):
+        self.monitor = SecurityMonitor()
+        self.locator = IPLocator()
+        self.control = DefenderControl()
+        
+    def watch_logs(self, follow=True, lines=50):
+        """Watch security logs in real-time"""
+        log_file = self.monitor.log_dir / f"security_{datetime.now().strftime('%Y%m%d')}.log"
+        
+        if not log_file.exists():
+            print(f"⚠️  Log file not found: {log_file}")
+            print("No activity logged today yet.")
+            return
+        
+        print(f"\n📡 Watching security logs: {log_file}")
+        print("=" * 70)
+        print("Press Ctrl+C to stop\n")
+        
+        if follow:
+            # Real-time tail functionality
+            try:
+                if sys.platform == 'darwin' or sys.platform.startswith('linux'):
+                    # Use native tail command for better performance
+                    subprocess.run(['tail', '-f', str(log_file)])
+                else:
+                    # Fallback: Python-based tail
+                    self._tail_file(log_file)
+            except KeyboardInterrupt:
+                print("\n\n✅ Stopped watching logs")
+        else:
+            # Just show last N lines
+            self._show_last_lines(log_file, lines)
+    
+    def _tail_file(self, filepath):
+        """Python implementation of tail -f"""
+        with open(filepath, 'r') as f:
+            # Go to end of file
+            f.seek(0, 2)
+            
+            while True:
+                line = f.readline()
+                if not line:
+                    time.sleep(0.1)
+                    continue
+                print(line, end='')
+    
+    def _show_last_lines(self, filepath, n=50):
+        """Show last N lines of a file"""
+        try:
+            with open(filepath, 'r') as f:
+                lines = f.readlines()
+                for line in lines[-n:]:
+                    print(line, end='')
+        except Exception as e:
+            print(f"Error reading file: {e}")
+    
+    def block_ip(self, ip, reason="Manual block"):
+        """Block an IP address"""
+        print(f"\n🚫 Blocking {ip}...")
+        success = self.monitor.block_ip(ip, reason=reason)
+        
+        if success:
+            print(f"✅ {ip} has been blocked")
+            print(f"\n💡 To activate firewall rules, run:")
+            print(f"   sudo pfctl -f {self.monitor.log_dir}/blocked_ips.pf")
+        else:
+            print(f"⚠️  {ip} is already blocked")
+    
+    def unblock_ip(self, ip):
+        """Unblock an IP address"""
+        success = self.control.unblock_ip(ip)
+        return success
+    
+    def list_blocked(self, detailed=False):
+        """List all blocked IPs"""
+        blocked = self.monitor.get_blocked_ips()
+        
+        if not blocked:
+            print("\n✅ No IPs are currently blocked")
+            return
+        
+        print(f"\n🚫 Blocked IPs ({len(blocked)} total)")
+        print("=" * 70)
+        
+        for ip, info in blocked.items():
+            print(f"\n📍 {ip}")
+            print(f"   Blocked: {info['blocked_at']}")
+            print(f"   Reason: {info['reason']}")
+            print(f"   Attempts: {info['attempts']}")
+            
+            if detailed:
+                # Get location info
+                try:
+                    location = self.locator.get_location(ip)
+                    if location:
+                        loc_str = f"{location.get('city', 'Unknown')}, {location.get('country', 'Unknown')}"
+                        print(f"   Location: {loc_str}")
+                        if location.get('isp'):
+                            print(f"   ISP: {location['isp']}")
+                except:
+                    pass
+        
+        print("\n" + "=" * 70)
+    
+    def locate_ip(self, ip):
+        """Show location information for an IP"""
+        self.control.track_ip_location(ip)
+    
+    def show_stats(self):
+        """Show security statistics"""
+        stats = self.monitor.get_statistics()
+        
+        print("\n📊 Security Statistics")
+        print("=" * 70)
+        print(f"Total Access Attempts: {stats['total_attempts']}")
+        print(f"Unique IPs Attempted: {stats['unique_ips_attempted']}")
+        print(f"Currently Blocked: {stats['blocked_ips_count']}")
+        
+        if stats['blocked_ips']:
+            print(f"\nBlocked IPs:")
+            for ip in stats['blocked_ips']:
+                print(f"  • {ip}")
+        
+        print("=" * 70 + "\n")
+    
+    def show_logs(self, ip=None, lines=20):
+        """Show access attempt logs"""
+        if ip:
+            self.control.view_logs(ip)
+        else:
+            print(f"\n📋 Recent Access Attempts (last {lines} entries)")
+            print("=" * 70)
+            
+            attempts = self.monitor.login_attempts
+            if not attempts:
+                print("No access attempts recorded yet")
+                return
+            
+            # Flatten and sort all attempts
+            all_attempts = []
+            for ip_addr, ip_attempts in attempts.items():
+                for attempt in ip_attempts:
+                    all_attempts.append({**attempt, 'ip': ip_addr})
+            
+            # Sort by timestamp
+            all_attempts.sort(key=lambda x: x['timestamp'], reverse=True)
+            
+            # Show last N
+            for attempt in all_attempts[:lines]:
+                print(f"\n{attempt['timestamp']}")
+                print(f"  IP: {attempt['ip']}")
+                print(f"  User: {attempt['username']}")
+                print(f"  Status: {attempt['status']}")
+            
+            print("\n" + "=" * 70)
+
+
+def main():
+    """Main entry point for iptrack command"""
+    parser = argparse.ArgumentParser(
+        description='IPTrack - Security Monitoring & IP Blocking Tool',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  iptrack watch                    Watch security logs in real-time
+  iptrack block 192.168.1.100      Block an IP address
+  iptrack unblock 192.168.1.100    Unblock an IP address
+  iptrack list                     List all blocked IPs
+  iptrack list -d                  List blocked IPs with details
+  iptrack locate 8.8.8.8           Find IP location
+  iptrack stats                    Show security statistics
+  iptrack logs                     Show recent access attempts
+  iptrack logs 192.168.1.100       Show logs for specific IP
+  iptrack dashboard                Show full security dashboard
+  iptrack export backup.json       Export all security data
+        """
+    )
+    
+    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+    
+    # Watch command
+    watch_parser = subparsers.add_parser('watch', help='Watch security logs in real-time')
+    watch_parser.add_argument('-n', '--lines', type=int, default=50,
+                            help='Number of lines to show initially')
+    watch_parser.add_argument('--no-follow', action='store_true',
+                            help='Don\'t follow the log file')
+    
+    # Block command
+    block_parser = subparsers.add_parser('block', help='Block an IP address')
+    block_parser.add_argument('ip', help='IP address to block')
+    block_parser.add_argument('-r', '--reason', default='Manual block',
+                            help='Reason for blocking')
+    
+    # Unblock command
+    unblock_parser = subparsers.add_parser('unblock', help='Unblock an IP address')
+    unblock_parser.add_argument('ip', help='IP address to unblock')
+    
+    # List command
+    list_parser = subparsers.add_parser('list', help='List blocked IPs')
+    list_parser.add_argument('-d', '--detailed', action='store_true',
+                           help='Show detailed information including location')
+    
+    # Locate command
+    locate_parser = subparsers.add_parser('locate', help='Find IP location')
+    locate_parser.add_argument('ip', help='IP address to locate')
+    
+    # Stats command
+    subparsers.add_parser('stats', help='Show security statistics')
+    
+    # Logs command
+    logs_parser = subparsers.add_parser('logs', help='Show access logs')
+    logs_parser.add_argument('ip', nargs='?', help='Show logs for specific IP')
+    logs_parser.add_argument('-n', '--lines', type=int, default=20,
+                           help='Number of log entries to show')
+    
+    # Dashboard command
+    subparsers.add_parser('dashboard', help='Show full security dashboard')
+    
+    # Export command
+    export_parser = subparsers.add_parser('export', help='Export security data')
+    export_parser.add_argument('file', nargs='?', default='security_export.json',
+                             help='Output file name')
+    
+    # Unblock-all command
+    subparsers.add_parser('unblock-all', help='Unblock all IPs')
+    
+    # Reset command
+    subparsers.add_parser('reset', help='Reset system (clear all data)')
+    
+    args = parser.parse_args()
+    
+    if not args.command:
+        parser.print_help()
+        return
+    
+    # Initialize CLI
+    cli = IPTrackCLI()
+    
+    try:
+        # Execute commands
+        if args.command == 'watch':
+            cli.watch_logs(follow=not args.no_follow, lines=args.lines)
+        
+        elif args.command == 'block':
+            cli.block_ip(args.ip, args.reason)
+        
+        elif args.command == 'unblock':
+            cli.unblock_ip(args.ip)
+        
+        elif args.command == 'list':
+            cli.list_blocked(detailed=args.detailed)
+        
+        elif args.command == 'locate':
+            cli.locate_ip(args.ip)
+        
+        elif args.command == 'stats':
+            cli.show_stats()
+        
+        elif args.command == 'logs':
+            cli.show_logs(ip=args.ip, lines=args.lines)
+        
+        elif args.command == 'dashboard':
+            cli.control.show_dashboard()
+        
+        elif args.command == 'export':
+            cli.control.export_logs(args.file)
+        
+        elif args.command == 'unblock-all':
+            cli.control.unblock_all()
+        
+        elif args.command == 'reset':
+            cli.control.reset_system()
+    
+    except KeyboardInterrupt:
+        print("\n\n✅ Operation cancelled")
+        sys.exit(0)
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

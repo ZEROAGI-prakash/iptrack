@@ -1,0 +1,33 @@
+# Logs and sensitive data
+logs/
+*.log
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Exports
+security_export.json
+evidence.json
+*.pf
+
+# Don't ignore logs directory structure
+!logs/.gitkeep

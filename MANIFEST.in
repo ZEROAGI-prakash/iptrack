@@ -1,0 +1,9 @@
+# IPTrack Security Tool
+# Professional CLI tool for security monitoring and IP blocking
+
+include README.md
+include QUICK_REFERENCE.md
+include LICENSE
+include requirements.txt
+include config.json
+recursive-include logs *.json *.log *.pf

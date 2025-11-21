@@ -1,0 +1,292 @@
+╔════════════════════════════════════════════════════════════════════╗
+║                                                                    ║
+║              🛡️  IPTrack - Gemini-Style CLI Tool 🛡️               ║
+║                                                                    ║
+║         Professional Security Monitoring - Simple & Powerful       ║
+║                                                                    ║
+╚════════════════════════════════════════════════════════════════════╝
+
+
+✅ COMPLETE! READY TO USE!
+═══════════════════════════════════════════════════════════════════
+
+
+🎯 SINGLE COMMAND: iptrack
+──────────────────────────────────────────────────────────────────
+
+Just like Gemini CLI, GitHub CLI, or other professional tools:
+
+    iptrack                  # Show beautiful welcome screen
+    iptrack <command>        # Run any command
+    iptrack help             # Get help
+
+
+🎨 BEAUTIFUL CLI INTERFACE
+──────────────────────────────────────────────────────────────────
+
+✅ Colorful output (ANSI colors)
+✅ Professional formatting
+✅ Clear status messages
+✅ Intuitive command structure
+✅ Helpful error messages
+✅ Clean, modern design
+
+
+📋 ALL COMMANDS
+──────────────────────────────────────────────────────────────────
+
+iptrack                    # Welcome screen with all commands
+iptrack watch              # 📡 Watch logs in real-time
+iptrack block <ip>         # 🚫 Block an IP
+iptrack unblock <ip>       # ✅ Unblock an IP
+iptrack list               # 📋 List blocked IPs
+iptrack list -d            # 📋 List with locations & details
+iptrack locate <ip>        # 🌍 Find IP geolocation
+iptrack stats              # 📊 Show statistics
+iptrack logs               # 📝 Show recent logs
+iptrack logs -n 50         # 📝 Show last 50 logs
+iptrack dashboard          # 🎛️  Full dashboard
+iptrack export <file>      # 💾 Export data
+iptrack help               # ❓ Detailed help
+
+
+🎨 EXAMPLE OUTPUT
+──────────────────────────────────────────────────────────────────
+
+$ iptrack
+
+╔════════════════════════════════════════════════════════════════════╗
+║                                                                    ║
+║              🛡️  IPTrack Security Tool v1.0.0 🛡️                  ║
+║                                                                    ║
+║         Professional CLI Security Monitoring & IP Blocking         ║
+║                                                                    ║
+╚════════════════════════════════════════════════════════════════════╝
+
+Usage: iptrack <command> [options]
+
+Commands:
+  watch        Watch security logs in real-time
+  block        Block an IP address
+  unblock      Unblock an IP address
+  list         List all blocked IPs
+  locate       Find IP geolocation
+  stats        Show security statistics
+  logs         Show access attempt logs
+  dashboard    Show full security dashboard
+  export       Export security data
+  help         Show detailed help
+
+Examples:
+  iptrack watch                 # Watch logs in real-time
+  iptrack block 192.168.1.100   # Block an IP
+  iptrack list -d               # List with details
+  iptrack locate 8.8.8.8        # Find IP location
+
+For detailed help: iptrack help
+
+
+──────────────────────────────────────────────────────────────────
+
+$ iptrack stats
+
+======================================================================
+📊 Security Statistics
+======================================================================
+
+Total Access Attempts: 6
+Unique IPs Attempted: 2
+Currently Blocked: 4
+
+Blocked IPs:
+  • 45.142.120.10
+  • 185.220.101.50
+  • 203.0.113.50
+  • 1.2.3.4
+
+======================================================================
+
+
+──────────────────────────────────────────────────────────────────
+
+$ iptrack list -d
+
+======================================================================
+🚫 Blocked IPs (4 total)
+======================================================================
+
+📍 45.142.120.10
+   Blocked: 2025-11-21T21:43:56.267000
+   Reason: Too many failed attempts
+   Attempts: 3
+   Location: Sandanski, Bulgaria
+   ISP: Cloudflare London, LLC
+
+📍 185.220.101.50
+   Blocked: 2025-11-21T21:43:56.770020
+   Reason: Too many failed attempts
+   Attempts: 3
+   Location: Brandenburg, Germany
+   ISP: Stiftung Erneuerbare Freiheit
+
+...
+
+======================================================================
+
+
+──────────────────────────────────────────────────────────────────
+
+$ iptrack block 192.168.1.100 -r "Brute force attack"
+
+======================================================================
+🚫 Blocking IP Address
+======================================================================
+
+IP: 192.168.1.100
+Reason: Brute force attack
+
+✓ 192.168.1.100 has been blocked
+
+💡 To activate firewall rules:
+   sudo pfctl -f logs/blocked_ips.pf
+
+
+🚀 KEY FEATURES LIKE GEMINI CLI
+──────────────────────────────────────────────────────────────────
+
+✅ Single Command
+   Just type "iptrack" - that's it!
+
+✅ Subcommands
+   Clear, intuitive subcommand structure
+
+✅ Beautiful Output
+   Colored, formatted, professional
+
+✅ Helpful Messages
+   Clear success/error/warning messages
+
+✅ Smart Defaults
+   Works great out of the box
+
+✅ Interactive
+   Watch logs in real-time
+
+✅ Global
+   Works from any directory
+
+
+💻 HOW TO USE
+──────────────────────────────────────────────────────────────────
+
+1️⃣ Open Terminal (anywhere)
+
+2️⃣ Type: iptrack
+
+3️⃣ See available commands
+
+4️⃣ Run: iptrack <command>
+
+That's it! Super simple!
+
+
+📦 EXAMPLES
+──────────────────────────────────────────────────────────────────
+
+# Quick security check
+iptrack stats
+
+# Watch for attacks (real-time)
+iptrack watch
+
+# Block an attacker
+iptrack block 45.142.120.10 -r "SSH brute force"
+
+# Find where they're from
+iptrack locate 45.142.120.10
+
+# See who's blocked
+iptrack list -d
+
+# Unblock someone
+iptrack unblock 192.168.1.100
+
+# Export for analysis
+iptrack export my_security_data.json
+
+
+🎯 INSTALLATION
+──────────────────────────────────────────────────────────────────
+
+Already installed! Just type:
+
+    iptrack
+
+If command not found, reload shell:
+
+    source ~/.zshrc
+
+
+📚 HELP SYSTEM
+──────────────────────────────────────────────────────────────────
+
+# General help
+iptrack
+iptrack help
+
+# Command-specific help
+iptrack watch --help
+iptrack block --help
+iptrack list --help
+
+
+🌈 COLOR CODING
+──────────────────────────────────────────────────────────────────
+
+GREEN  = Success messages
+RED    = Errors & blocked IPs
+YELLOW = Warnings & important info
+BLUE   = Information
+CYAN   = Headers & highlights
+
+
+🔥 ADVANCED USAGE
+──────────────────────────────────────────────────────────────────
+
+# Watch last 100 lines then tail
+iptrack watch -n 100
+
+# Just show logs, don't follow
+iptrack watch --no-follow
+
+# Show last 50 access attempts
+iptrack logs -n 50
+
+# Detailed list with locations
+iptrack list -d
+
+# Block with custom reason
+iptrack block 1.2.3.4 -r "Port scanning detected"
+
+
+🎉 DISTRIBUTION READY
+──────────────────────────────────────────────────────────────────
+
+✅ Professional CLI tool
+✅ Works like Gemini, GitHub CLI, etc.
+✅ Beautiful, colorful output
+✅ Simple command structure
+✅ Ready to share with anyone
+
+Package in: dist/iptrack-v1.0.0.{tar.gz,zip}
+
+
+═══════════════════════════════════════════════════════════════════
+
+          🛡️  IPTrack - Security Monitoring Made Simple  🛡️
+
+              Professional • Powerful • User-Friendly
+
+                    Just type: iptrack
+
+═══════════════════════════════════════════════════════════════════

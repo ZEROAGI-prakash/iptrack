@@ -1,0 +1,3 @@
+[console_scripts]
+iptrack = iptrack:main
+

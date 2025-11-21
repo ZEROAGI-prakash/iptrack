@@ -1,0 +1,82 @@
+╔════════════════════════════════════════════════════════════════════╗
+║                  IPTrack Security Tool v1.0.0                      ║
+║                      Installation Guide                            ║
+╚════════════════════════════════════════════════════════════════════╝
+
+QUICK INSTALL
+═════════════
+
+1. Open Terminal and navigate to this folder:
+   cd /path/to/iptrack-v1.0.0
+
+2. Run the installer:
+   ./install_global.sh
+
+3. Reload your shell:
+   source ~/.zshrc
+
+4. Test the installation:
+   iptrack --help
+
+5. Start using:
+   iptrack dashboard
+
+
+SYSTEM-WIDE INSTALLATION (All Users)
+═════════════════════════════════════
+
+For installing on a server for all users:
+   sudo ./install_global.sh
+
+
+REQUIREMENTS
+════════════
+
+• macOS 10.15 or higher
+• Python 3.7+
+• Internet connection (for IP geolocation)
+
+
+QUICK START
+═══════════
+
+# Watch security logs in real-time
+iptrack watch
+
+# View dashboard
+iptrack dashboard
+
+# Block an IP
+iptrack block 192.168.1.100
+
+# Find IP location
+iptrack locate 8.8.8.8
+
+# Show all commands
+iptrack --help
+
+
+DOCUMENTATION
+═════════════
+
+• README.md - Full documentation
+• GLOBAL_CLI_GUIDE.md - Complete command reference
+• QUICK_REFERENCE.md - Quick command cheat sheet
+
+
+SUPPORT
+═══════
+
+For help: iptrack --help
+For issues: Check README.md troubleshooting section
+
+
+LICENSE
+═══════
+
+MIT License - Free for personal and commercial use
+See LICENSE file for details
+
+════════════════════════════════════════════════════════════════════
+
+Happy monitoring! 🛡️
